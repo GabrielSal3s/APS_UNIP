@@ -1,0 +1,7 @@
+Criterio,Algoritmo,Comparacoes,Tempo (s)
+data_pas,Bubble Sort,1285606,1.129941
+data_pas,Quick Sort,17133,0.020103
+bioma,Bubble Sort,1285606,1.620297
+bioma,Quick Sort,1604,0.008042
+municipio,Bubble Sort,1285606,1.256885
+municipio,Quick Sort,10770,0.01767
