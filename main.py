@@ -1,47 +1,57 @@
-import os
-import requests
+from utils import baixar_e_extrair_zip, ler_coluna_frp
+from algoritmos import bubble_sort, quick_sort
 import csv
-
-def baixar_dados_inpe():
-    """
-    Baixa o arquivo CSV do INPE (últimos 10 minutos) e retorna uma lista com os valores da coluna 'frp'.
-    """
-    url = "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/10min/focos_10min_20251103_1520.csv"
-    os.makedirs("data", exist_ok=True)
-    caminho = os.path.join("data", "focos_10min.csv")
-
-    try:
-        # Faz download do CSV
-        response = requests.get(url, timeout=15)
-        response.raise_for_status()
-        with open(caminho, "w", encoding="utf-8") as f:
-            f.write(response.text)
-        print(f"✅ CSV baixado e salvo em: {caminho}")
-    except Exception as e:
-        print(f"⚠️ Erro ao baixar CSV: {e}")
-        return [10, 5, 8, 3, 7]  # fallback
-
-    # Lê coluna 'frp'
-    frp_lista = []
-    try:
-        with open(caminho, newline="", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                if row.get("frp") and row["frp"].isdigit():
-                    frp_lista.append(int(row["frp"]))
-        print(f"🔢 Total de valores 'frp' extraídos: {len(frp_lista)}")
-    except Exception as e:
-        print(f"⚠️ Erro ao ler CSV: {e}")
-        return [10, 5, 8, 3, 7]
-
-    return frp_lista[:1000] if frp_lista else [10, 5, 8, 3, 7]
+import os
+import time
 
 def salvar_resultados(resultados):
-    os.makedirs("data", exist_ok=True)
-    caminho = os.path.join("data", "resultados.csv")
-    cabecalho = ["algoritmo", "comparacoes", "tempo_exec"]
+    pasta_atual = os.path.dirname(os.path.abspath(__file__))
+    caminho = os.path.join(pasta_atual, "resultados.csv")
+    cabecalho = ["algoritimos", "comparacoes", "tempo_exec"]
+
     with open(caminho, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=cabecalho)
         writer.writeheader()
         writer.writerows(resultados)
     print(f"✅ Resultados salvos em: {caminho}")
+
+def main():
+    print("🚀 Iniciando processo...")
+    url_zip = "https://queimadas.dgi.inpe.br/queimadas/portal-static/estatisticas_estados/Estados_2025.zip"
+
+    caminho_csv = baixar_e_extrair_zip(url_zip)
+    if not caminho_csv:
+        print("⚠️ Não foi possível obter o CSV.")
+        return
+
+    dados = ler_coluna_frp(caminho_csv)
+    if not dados:
+        print("⚠️ Nenhum dado disponível para ordenação.")
+        return
+
+    resultados = []
+
+    # Bubble Sort
+    inicio = time.time()
+    _, comp_bubble = bubble_sort(dados.copy())
+    tempo_bubble = time.time() - inicio
+    resultados.append({
+        "algoritimos": "Bubble Sort",
+        "comparacoes": comp_bubble,
+        "tempo_exec": round(tempo_bubble, 4)
+    })
+
+    # Quick Sort
+    inicio = time.time()
+    _, comp_quick = quick_sort(dados.copy())
+    tempo_quick = time.time() - inicio
+    resultados.append({
+        "algoritimos": "Quick Sort",
+        "comparacoes": comp_quick,
+        "tempo_exec": round(tempo_quick, 4)
+    })
+
+    salvar_resultados(resultados)
+
+if __name__ == "__main__":
+    main()
